@@ -2,21 +2,22 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'eclipse'
 
-
 group = 'it.greenvulcano.iot'
 version = '1.0-SNAPSHOT'
 
 description = """gvlib-java"""
 
-sourceCompatibility = 1.5
-targetCompatibility = 1.5
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 
 
 repositories {
         
+     maven { url "https://repo.eclipse.org/content/repositories/paho-releases/" }
      maven { url "http://repo.maven.apache.org/maven2" }
 }
 dependencies {
+    runtime group: 'org.eclipse.paho', name: 'org.eclipse.paho.client.mqttv3', version:'1.0.2'
     testCompile group: 'junit', name: 'junit', version:'3.8.1'
 }
