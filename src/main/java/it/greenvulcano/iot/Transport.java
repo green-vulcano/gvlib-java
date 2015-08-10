@@ -21,13 +21,36 @@ package it.greenvulcano.iot;
 
 import java.io.IOException;
 
+/**
+ * Interface to abstract transport-related details.
+ * 
+ * The GreenVulcano Communication Library keeps protocol and transmission
+ * separated, so that either part can have multiple implementations which
+ * can all be combined to obtain maximum flexibility.
+ * <br/>
+ * <strong>Note:</strong> By design, a <code>Transport</code> is responsible
+ * for its callbacks (i.e. it manages and owns subscripton and unsubscription)
+ * while other classes having callback-related methods, including
+ * {@link GVComm}, will only eventually delegate all non-trivial aspects to
+ * their <code>Transport</code>.
+ *  
+ * @see Callback
+ * @author Domenico Barra <eisenach@gmail.com>
+ */
 public interface Transport {
 
 	boolean isConnected();
-	void     connect() throws IOException;
-	void     disconnect();
+	void    connect() throws IOException;
+	void    disconnect();
 
 	void send(String service, byte[] payload) throws IOException;
 	void subscribe(String topic, Callback cb) throws IOException;
 	
+	/**
+	 * Checks - non-blockingly - whether there's any incoming data to be processed.
+	 * If so, it calls any registered callback for the incoming data.
+	 * @return boolean <code>true</code> if any data was received during the poll operation.
+	 * @throws IOException if anything goes wrong on the network level.
+	 */
+	boolean poll() throws IOException;
 }
