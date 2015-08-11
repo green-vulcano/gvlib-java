@@ -20,8 +20,7 @@
 package it.greenvulcano.iot.protocols;
 
 import it.greenvulcano.iot.DeviceInfo;
-import it.greenvulcano.iot.Protocol;
-import it.greenvulcano.iot.Transport;
+import it.greenvulcano.iot.transports.Transport;
 
 public enum ProtocolFactory {
 	

@@ -21,8 +21,7 @@ package it.greenvulcano.iot.protocols;
 import java.io.IOException;
 
 import it.greenvulcano.iot.DeviceInfo;
-import it.greenvulcano.iot.Protocol;
-import it.greenvulcano.iot.Transport;
+import it.greenvulcano.iot.transports.Transport;
 
 /**
  * GreenVulcano IOT Protocol v.1

@@ -18,6 +18,9 @@
  */
 package it.greenvulcano.iot;
 
+import it.greenvulcano.iot.protocols.Protocol;
+import it.greenvulcano.iot.transports.Transport;
+
 import java.io.IOException;
 
 /**
