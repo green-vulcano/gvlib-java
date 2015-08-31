@@ -37,6 +37,9 @@ public abstract class TransportBase implements Transport {
 
 	@Override
 	public final void subscribe(String topic, Callback cb) throws IOException {
+		if (!isConnected()) {
+			connect();
+		}
 		handleSubscribe(topic, cb);
 		List<Callback> callbacks = registeredCallbacks.get(topic);
 		if (callbacks == null) {
@@ -48,6 +51,9 @@ public abstract class TransportBase implements Transport {
 	
 	@Override
 	public void unsubscribe(String topic, Callback cb) throws IOException {
+		if (!isConnected()) {
+			connect();
+		}
 		handleUnsubscribe(topic, cb);
 		if (cb == null) {
 			registeredCallbacks.remove(topic);
