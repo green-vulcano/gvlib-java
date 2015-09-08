@@ -66,8 +66,8 @@ public class GVComm {
 	 * Sends info about the current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendDeviceInfo() throws IOException {
-		protocol.sendDeviceInfo(); 
+	public void addDevice() throws IOException {
+		protocol.addDevice(); 
 	}
 	
 	/**
@@ -78,8 +78,8 @@ public class GVComm {
 	 * @param type the sensor type.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendSensorConfig(String id, String name, String type) throws IOException {
-		protocol.sendSensorConfig(id, name, type);
+	public void addSensor(String id, String name, String type) throws IOException {
+		protocol.addSensor(id, name, type);
 	}
 	
 	/**
@@ -94,13 +94,12 @@ public class GVComm {
 	 *           no callback is required.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendActuatorConfig(String id, String name, String type) throws IOException {
-		protocol.sendActuatorConfig(id, name, type);
+	public void addActuator(String id, String name, String type) throws IOException {
+		protocol.addActuator(id, name, type);
 	}
 	
-	public void sendActuatorConfig(String id, String name, String type,
-	                        String topic, Callback fn) throws IOException {
-		protocol.sendActuatorConfig(id, name, type, topic);
+	public void addActuator(String id, String name, String type, String topic, Callback fn) throws IOException {
+		protocol.addActuator(id, name, type, topic);
 		if (fn != null) {
 			addCallback(topic, fn);
 		}

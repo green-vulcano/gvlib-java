@@ -23,10 +23,10 @@ import java.io.IOException;
 
 public interface Protocol {
 
-	void sendDeviceInfo() throws IOException;
-	void sendSensorConfig(String id, String name, String type) throws IOException;
-	void sendActuatorConfig(String id, String name, String type) throws IOException;
-	void sendActuatorConfig(String id, String name, String type, String topic) throws IOException;
+	void addDevice() throws IOException;
+	void addSensor(String id, String name, String type) throws IOException;
+	void addActuator(String id, String name, String type) throws IOException;
+	void addActuator(String id, String name, String type, String topic) throws IOException;
 	void sendData(String sensorId, byte[] value) throws IOException;
 	
 }
