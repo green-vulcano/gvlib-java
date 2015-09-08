@@ -43,14 +43,22 @@ public class Protocol_IOT_v1 implements Protocol {
 	}
 	
 	@Override
-	public void sendSensorConfig(int id, String name, String type) throws IOException {
+	public void sendSensorConfig(String id, String name, String type) throws IOException {
 		String payload = String.format("{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\"}", id, name, type);
 		String service = String.format("/devices/%s/sensors", deviceInfo.getId());
 		transport.send(service, payload.getBytes());
 	}
 	
 	@Override
-	public void sendActuatorConfig(int id, String name, String type,
+	public void sendActuatorConfig(String id, String name, String type) throws IOException {
+		String payload = String.format(
+				"{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\", \"to\": \"%s\"}", id, name, type);
+		String service = String.format("/devices/%s/actuators", deviceInfo.getId());
+		transport.send(service, payload.getBytes());
+	}
+	
+	@Override
+	public void sendActuatorConfig(String id, String name, String type,
 			String topic) throws IOException {
 		String payload = String.format(
 				"{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\", \"to\": \"%s\"}", id, name, type, topic);
@@ -59,7 +67,7 @@ public class Protocol_IOT_v1 implements Protocol {
 	}
 	
 	@Override
-	public void sendData(int sensorId, byte[] value) throws IOException {
+	public void sendData(String sensorId, byte[] value) throws IOException {
 		String payload = String.format("{\"id\": \"%d\", value: \"%s\"}", sensorId, new String(value));
 		String service = String.format("/devices/%s/sensors/%d/data", deviceInfo.getId(), sensorId);
 		transport.send(service, payload.getBytes());

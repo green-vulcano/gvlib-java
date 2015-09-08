@@ -24,8 +24,9 @@ import java.io.IOException;
 public interface Protocol {
 
 	void sendDeviceInfo() throws IOException;
-	void sendSensorConfig(int id, String name, String type) throws IOException;
-	void sendActuatorConfig(int id, String name, String type, String topic) throws IOException;
-	void sendData(int sensorId, byte[] value) throws IOException;
+	void sendSensorConfig(String id, String name, String type) throws IOException;
+	void sendActuatorConfig(String id, String name, String type) throws IOException;
+	void sendActuatorConfig(String id, String name, String type, String topic) throws IOException;
+	void sendData(String sensorId, byte[] value) throws IOException;
 	
 }

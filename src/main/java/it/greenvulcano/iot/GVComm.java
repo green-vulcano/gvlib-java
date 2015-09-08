@@ -58,7 +58,7 @@ public class GVComm {
 	 * @see Transport
 	 * @see Transport#subscribe(String, Callback)
 	 */
-	void addCallback(String topic, Callback cb) throws IOException {
+	public void addCallback(String topic, Callback cb) throws IOException {
 		transport.subscribe(topic, cb);
 	}
 	
@@ -66,7 +66,7 @@ public class GVComm {
 	 * Sends info about the current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	void sendDeviceInfo() throws IOException {
+	public void sendDeviceInfo() throws IOException {
 		protocol.sendDeviceInfo(); 
 	}
 	
@@ -78,7 +78,7 @@ public class GVComm {
 	 * @param type the sensor type.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	void sendSensorConfig(int id, String name, String type) throws IOException {
+	public void sendSensorConfig(String id, String name, String type) throws IOException {
 		protocol.sendSensorConfig(id, name, type);
 	}
 	
@@ -94,7 +94,11 @@ public class GVComm {
 	 *           no callback is required.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	void sendActuatorConfig(int id, String name, String type,
+	public void sendActuatorConfig(String id, String name, String type) throws IOException {
+		protocol.sendActuatorConfig(id, name, type);
+	}
+	
+	public void sendActuatorConfig(String id, String name, String type,
 	                        String topic, Callback fn) throws IOException {
 		protocol.sendActuatorConfig(id, name, type, topic);
 		if (fn != null) {
@@ -108,7 +112,7 @@ public class GVComm {
 	 * @param value the value read from the sensor.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	void sendData(int sensorId, byte[] value)  throws IOException
+	public void sendData(String sensorId, byte[] value)  throws IOException
 	{
 		protocol.sendData(sensorId, value);
 	}
@@ -124,7 +128,7 @@ public class GVComm {
 	 *         was any data waiting on the wire and it was dispatched).
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	boolean poll() throws IOException {
+	public boolean poll() throws IOException {
 		return transport.poll();
 	}
 	
