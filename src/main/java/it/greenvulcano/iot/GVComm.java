@@ -58,7 +58,7 @@ public class GVComm {
 	 * @see Transport
 	 * @see Transport#subscribe(String, Callback)
 	 */
-	public void addCallback(String topic, Callback cb) throws IOException {
+	private void addCallback(String topic, Callback cb) throws IOException {
 		transport.subscribe(topic, cb);
 	}
 	
@@ -68,6 +68,14 @@ public class GVComm {
 	 */
 	public void addDevice() throws IOException {
 		protocol.addDevice(); 
+	}
+	
+	/**
+	 * Send information about the status of current device.
+	 * @throws IOException if anything goes wrong with the underlying transport.
+	 */
+	public void sendStatus() throws IOException {
+		protocol.sendStatus();
 	}
 	
 	/**
@@ -94,8 +102,8 @@ public class GVComm {
 	 *           no callback is required.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void addActuator(String id, String name, String type) throws IOException {
-		protocol.addActuator(id, name, type);
+	public void addActuator(String id, String name, String type, Callback cb) throws IOException {
+		protocol.addActuator(id, name, type, cb);
 	}
 	
 	public void addActuator(String id, String name, String type, String topic, Callback fn) throws IOException {

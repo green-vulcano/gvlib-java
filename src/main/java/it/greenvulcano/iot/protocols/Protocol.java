@@ -21,11 +21,14 @@ package it.greenvulcano.iot.protocols;
 
 import java.io.IOException;
 
+import it.greenvulcano.iot.Callback;
+
 public interface Protocol {
 
 	void addDevice() throws IOException;
+	void sendStatus() throws IOException;
 	void addSensor(String id, String name, String type) throws IOException;
-	void addActuator(String id, String name, String type) throws IOException;
+	void addActuator(String id, String name, String type, Callback cb) throws IOException;
 	void addActuator(String id, String name, String type, String topic) throws IOException;
 	void sendData(String sensorId, byte[] value) throws IOException;
 	

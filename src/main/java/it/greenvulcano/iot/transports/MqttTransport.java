@@ -95,7 +95,7 @@ public class MqttTransport extends TransportBase {
 	public MqttTransport(ConnectionParams params) throws IOException {
 		this.params = params;
 		try {
-			client = new MqttClient(String.format("tcp://%s:%d",
+			client = new MqttClient(String.format("tcp:/%s:%d",
 					params.server.toString(), params.port),
 					params.deviceInfo.getId());
 			client.setCallback(cbHandler);

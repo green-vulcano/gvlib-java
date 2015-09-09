@@ -20,6 +20,7 @@ package it.greenvulcano.iot.protocols;
 
 import java.io.IOException;
 
+import it.greenvulcano.iot.Callback;
 import it.greenvulcano.iot.DeviceInfo;
 import it.greenvulcano.iot.transports.Transport;
 
@@ -37,23 +38,31 @@ public class Protocol_IOT_v1 implements Protocol {
 	@Override
 	public void addDevice() throws IOException {
 		String payload = String.format(
-				"{\"id\": \"%s\", \"nm\": \"%s\", \"ip\": \"%s\", \"prt\": \"%d\"}",
-				deviceInfo.getId(), deviceInfo.getName(), deviceInfo.getIp().toString(), deviceInfo.getPort());
-		transport.send("/devices", payload.getBytes());
-	}
-	
-	@Override
-	public void addSensor(String id, String name, String type) throws IOException {
-		String payload = String.format("{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\"}", id, name, type);
-		String service = String.format("/devices/%s/sensors", deviceInfo.getId());
+				"{\"nm\":\"%s\", \"ip\":\"%s\", \"prt\":\"%d\"}",
+				deviceInfo.getName(), deviceInfo.getIp().toString(), deviceInfo.getPort());
+		String service = String.format("/devices/%s", deviceInfo.getId());
 		transport.send(service, payload.getBytes());
 	}
 	
 	@Override
-	public void addActuator(String id, String name, String type) throws IOException {
+	public void sendStatus() throws IOException {
+		String payload = String.format("{\"st\":true}");
+		String service = String.format("/devices/%s/status", deviceInfo.getId());
+		transport.send(service, payload.getBytes());
+	}
+	
+	@Override
+	public void addSensor(String id, String name, String type) throws IOException {
+		String payload = String.format("{\"nm\":\"%s\", \"tp\":\"%s\"}", name, type);
+		String service = String.format("/devices/%s/sensors/%s", deviceInfo.getId(), id);
+		transport.send(service, payload.getBytes());
+	}
+	
+	@Override
+	public void addActuator(String id, String name, String type, Callback cb) throws IOException {
 		String payload = String.format(
-				"{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\", \"to\": \"%s\"}", id, name, type);
-		String service = String.format("/devices/%s/actuators", deviceInfo.getId());
+				"{\"nm\":\"%s\", \"tp\":\"%s\"}", name, type);
+		String service = String.format("/devices/%s/actuators/%s", deviceInfo.getId(), id);
 		transport.send(service, payload.getBytes());
 	}
 	
@@ -61,15 +70,15 @@ public class Protocol_IOT_v1 implements Protocol {
 	public void addActuator(String id, String name, String type,
 			String topic) throws IOException {
 		String payload = String.format(
-				"{\"id\": \"%d\", \"nm\": \"%s\", \"tp\": \"%s\", \"to\": \"%s\"}", id, name, type, topic);
-		String service = String.format("/devices/%s/actuators", deviceInfo.getId());
+				"{\"nm\":\"%s\", \"tp\":\"%s\", \"to\":\"%s\"}", name, type, topic);
+		String service = String.format("/devices/%s/actuators/%s", deviceInfo.getId(), id);
 		transport.send(service, payload.getBytes());
 	}
 	
 	@Override
 	public void sendData(String sensorId, byte[] value) throws IOException {
-		String payload = String.format("{\"id\": \"%d\", value: \"%s\"}", sensorId, new String(value));
-		String service = String.format("/devices/%s/sensors/%d/data", deviceInfo.getId(), sensorId);
+		String payload = String.format("{\"value\":\"%s\"}", new String(value));
+		String service = String.format("/devices/%s/sensors/%s/output", deviceInfo.getId(), sensorId);
 		transport.send(service, payload.getBytes());
 	}
 	

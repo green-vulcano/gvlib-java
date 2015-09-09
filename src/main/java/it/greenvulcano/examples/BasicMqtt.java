@@ -49,7 +49,7 @@ public class BasicMqtt {
 		/* Info about the device */
 		String id = "GVDEV999";
 		String name = "Test";
-		byte[] ipDev = new byte[]{10, 100, 80, 99};
+		byte[] ipDev = new byte[]{10, 100, 80, 14};
 		InetAddress ipDevice = InetAddress.getByAddress(ipDev);
 		int dPort = 9999;
 		
@@ -58,39 +58,49 @@ public class BasicMqtt {
 		InetAddress ipServer = InetAddress.getByAddress(ipSer);
 		int sPort = 1883;
 		
-		/* Creating a new device... */
-		DeviceInfo device = new DeviceInfo(id, name, ipDevice, dPort);
-		
-		/* ...a transport with his connection parameters... */
-		ConnectionParams connectionParam = new ConnectionParams(device, ipServer, sPort);
-		MqttTransport mqttTransport = new MqttTransport(connectionParam);
-		
-		/* ...and a protocol */
-		Protocol_IOT_v1 protocol = new Protocol_IOT_v1(device, mqttTransport);
-		
-		/* Use the GVComm to connect transport with protocol... */
-		GVComm gvComm = new GVComm(mqttTransport, protocol);
-		
-		/* ... and send device, sensors and actuators info to the server */
-		gvComm.addDevice();
-		gvComm.addSensor("SED99901", "Sensor Test", "NUMERIC");
-		gvComm.addActuator("ACD99901", "Actuator Test", "NUMERIC");
-		
-		BasicMqtt bmqtt = new BasicMqtt();
-		Callback cb = bmqtt.new CallbackTest();
-		
-		/* Don't forget to register callback to mqtt actuator topic */
-		gvComm.addCallback("/devices/GVDEV999/actuators/ACD99901/input", cb);
-		
-		/* Send value from sensor to actuator*/
-		while (true) {
-			gvComm.poll();
+		try {
 			
-			/* Simulation of recovering data from a sensor */
-			//value = getSensorValue();
-			String value = "0";
+			BasicMqtt bmqtt = new BasicMqtt();
+			Callback cb = bmqtt.new CallbackTest();
 			
-			gvComm.sendData("SED99901", value.getBytes());
+			/* Creating a new device... */
+			DeviceInfo device = new DeviceInfo(id, name, ipDevice, dPort);
+		
+			/* ...a transport with his connection parameters... */
+			ConnectionParams connectionParam = new ConnectionParams(device, ipServer, sPort);
+			MqttTransport mqttTransport = new MqttTransport(connectionParam);
+		
+			/* ...and a protocol */
+			Protocol_IOT_v1 protocol = new Protocol_IOT_v1(device, mqttTransport);
+		
+			/* Use the GVComm to connect transport with protocol... */
+			GVComm gvComm = new GVComm(mqttTransport, protocol);
+			
+			/* ... verify if the transport is connected... */
+			if (mqttTransport.isConnected()) {
+				gvComm.sendStatus();
+			} else {
+				System.out.println("The device is not connected!!!");
+			}
+			
+			/* ... and send device, sensors and actuators info to the server */
+			gvComm.addDevice();
+			gvComm.addSensor("SED99901", "Sensor Test", "NUMERIC");
+			gvComm.addActuator("ACD99901", "Actuator Test", "NUMERIC", cb);
+		
+			/* Send value from sensor to actuator*/
+			while (true) {
+				gvComm.poll();
+				
+				/* Simulation of recovering data from a sensor */
+				//value = getSensorValue();
+				String value = "0";
+				
+				gvComm.sendData("SED99901", value.getBytes());
+			}
+			
+		} catch(IOException e) {
+			throw new IOException(e);
 		}
 		
 	}
