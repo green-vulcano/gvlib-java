@@ -76,13 +76,6 @@ public class BasicMqtt {
 			/* Use the GVComm to connect transport with protocol... */
 			GVComm gvComm = new GVComm(mqttTransport, protocol);
 			
-			/* ... verify if the transport is connected... */
-			if (mqttTransport.isConnected()) {
-				gvComm.sendStatus();
-			} else {
-				System.out.println("The device is not connected!!!");
-			}
-			
 			/* ... and send device, sensors and actuators info to the server */
 			gvComm.addDevice();
 			gvComm.addSensor("SED99901", "Sensor Test", "NUMERIC");

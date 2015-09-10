@@ -21,12 +21,14 @@ package it.greenvulcano.iot.transports;
 
 import it.greenvulcano.iot.Callback;
 import it.greenvulcano.iot.DeviceInfo;
+import it.greenvulcano.iot.protocols.Protocol_IOT_v1;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+//import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -101,6 +103,10 @@ public class MqttTransport extends TransportBase {
 			client.setCallback(cbHandler);
 			if (params.autoconnect) {
 				connect();
+				if (this.isConnected()) {
+					Protocol_IOT_v1 prot = new Protocol_IOT_v1(params.deviceInfo, this);
+					prot.sendStatus();
+				}
 			}
 
 		} catch (MqttException e) {
