@@ -22,13 +22,12 @@ package it.greenvulcano.iot.protocols;
 import it.greenvulcano.iot.DeviceInfo;
 import it.greenvulcano.iot.transports.Transport;
 
-public enum ProtocolFactory {
-	
+public enum ProtocolFactory {	
 	INSTANCE;
+	
 	static ProtocolFactory getInstance() { return INSTANCE; }
 	
 	Protocol createDefaultProtocol(DeviceInfo info, Transport transport) {
 		return new Protocol_IOT_v1(info, transport);
 	}
-	
 }

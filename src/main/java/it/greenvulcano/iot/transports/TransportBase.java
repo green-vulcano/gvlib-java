@@ -32,20 +32,30 @@ import java.util.Map;
  * Practical base class for most {@link Transport} implementations.
  * @author Domenico Barra <eisenach@gmail.com>
  */
-public abstract class TransportBase implements Transport {
-
+public abstract class TransportBase implements Transport {	
+	/**
+	 * Holds the topic subscription details. This is meant to be accessed only by
+	 * the following methods of this class.
+	 * @see #subscribe(String, Callback)
+	 * @see #unsubscribe(String, Callback)
+	 * @see #getRegisteredCallbacks(String)
+	 */
+	protected Map<String, List<Callback>> registeredCallbacks = new HashMap<>();
 
 	@Override
-	public final void subscribe(String topic, Callback cb) throws IOException {
+	public void subscribe(String topic, Callback cb) throws IOException {
 		if (!isConnected()) {
 			connect();
 		}
+		
 		handleSubscribe(topic, cb);
+		
 		List<Callback> callbacks = registeredCallbacks.get(topic);
 		if (callbacks == null) {
 			callbacks = new ArrayList<>();
 			registeredCallbacks.put(topic, callbacks);
 		}
+		
 		callbacks.add(cb);
 	}
 	
@@ -66,7 +76,6 @@ public abstract class TransportBase implements Transport {
 				}
 			}
 		}
-		
 	}
 	
 	/**
@@ -75,7 +84,7 @@ public abstract class TransportBase implements Transport {
 	 * @return an immutable list. If no callbacks are found, the list is empty
 	 *         (i.e. not <code>null</code>).
 	 */
-	protected List<Callback> getRegisteredCallbacks(String topic) {
+	public List<Callback> getRegisteredCallbacks(String topic) {
 		List<Callback> callbacks = registeredCallbacks.get(topic);
 		if (callbacks != null) {
 			return Collections.unmodifiableList(callbacks);
@@ -105,13 +114,4 @@ public abstract class TransportBase implements Transport {
 	 * @throws IOException if anything goes wrong during the unsubscription phase.
 	 */
 	protected abstract void handleUnsubscribe(String topic, Callback cb) throws IOException;
-	
-	/**
-	 * Holds the topic subscription details. This is meant to be accessed only by
-	 * the following methods of this class.
-	 * @see #subscribe(String, Callback)
-	 * @see #unsubscribe(String, Callback)
-	 * @see #getRegisteredCallbacks(String)
-	 */
-	private Map<String, List<Callback>> registeredCallbacks = new HashMap<>();
 }

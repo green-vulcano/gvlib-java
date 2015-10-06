@@ -19,83 +19,131 @@
 
 package it.greenvulcano.examples;
 
-import java.io.IOException;
-import java.net.InetAddress;
-
 import it.greenvulcano.iot.Callback;
 import it.greenvulcano.iot.DeviceInfo;
 import it.greenvulcano.iot.GVComm;
 import it.greenvulcano.iot.protocols.Protocol_IOT_v1;
-import it.greenvulcano.iot.transports.MqttTransport;
-import it.greenvulcano.iot.transports.MqttTransport.ConnectionParams;
+import it.greenvulcano.iot.transports.mqtt.ConnectionParams;
+import it.greenvulcano.iot.transports.mqtt.MqttTransport;
+
+import java.io.IOException;
+import java.net.InetAddress;
 
 public class BasicMqtt {
+	public static final int MODE_STOP = 0;
+	public static final int MODE_RUN = 1;	
+	private int current_mode;
 	
-	/* Callback implementation */
-	public class CallbackTest implements Callback {
+	public BasicMqtt() {
+		this.current_mode = MODE_STOP;
+	}
+	
+	public int getMode() {
+		return current_mode;
+	}
+	
+	/* Actuator callback */
+	public class CallbackActuator implements Callback {
+		private String id;
+		
+		public CallbackActuator(String id) {
+			this.id = id;
+		}
 		
 		@Override
 		public Callback call(Object value) {
-			
-			/* Simulation of movement for an actuator */
-			// moveActuator()
-			System.out.println(value);
+			System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + new String((byte[])value));
 			return null;
 		}
 	}
-
-	public static void main(String[] args) throws IOException {
-		
+	
+	/* Device callback */
+	public class CallbackDevice implements Callback {
+		@Override
+		public Callback call(Object value) {
+			int pValue = -1;
+			
+			try {
+				pValue = Integer.parseInt(new String((byte[])value));
+								
+				if(pValue == 0) {
+					System.out.println("CURRENT MODE STOP");
+					current_mode = MODE_STOP;
+				}
+				else if(pValue == 1) {
+					System.out.println("CURRENT MODE RUN");
+					current_mode = MODE_RUN;
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			
+			return null;
+		}
+	}
+	
+	/* Test */
+	public static void main(String[] args) throws IOException {		
 		/* Info about the device */
-		String id = "GVDEV999";
-		String name = "Test";
-		byte[] ipDev = new byte[]{10, 100, 80, 14};
-		InetAddress ipDevice = InetAddress.getByAddress(ipDev);
+		final String device_id = "GVDEV999";
+		final String device_name = "Test";
+		byte[] device_ip = {10, 100, 80, 22};
+		InetAddress ipDevice = InetAddress.getByAddress(device_ip);
 		int dPort = 9999;
+		
+		final String SENSOR1_ID = "SED99901";
+		final String ACTUATOR1_ID = "ACD99901";
+		final String ACTUATOR2_ID = "ACD99902";
 		
 		/* Info about mqtt server */
 		byte[] ipSer = new byte[]{10, 100, 60, 103};
 		InetAddress ipServer = InetAddress.getByAddress(ipSer);
 		int sPort = 1883;
 		
-		try {
-			
+		try {			
 			BasicMqtt bmqtt = new BasicMqtt();
-			Callback cb = bmqtt.new CallbackTest();
+			Callback cbActuator1 = bmqtt.new CallbackActuator(ACTUATOR1_ID);
+			Callback cbActuator2 = bmqtt.new CallbackActuator(ACTUATOR2_ID);
+			Callback cbDevice = bmqtt.new CallbackDevice(); 
 			
 			/* Creating a new device... */
-			DeviceInfo device = new DeviceInfo(id, name, ipDevice, dPort);
+			DeviceInfo device = new DeviceInfo(device_id, device_name, ipDevice, dPort);
 		
 			/* ...a transport with his connection parameters... */
 			ConnectionParams connectionParam = new ConnectionParams(device, ipServer, sPort);
 			MqttTransport mqttTransport = new MqttTransport(connectionParam);
-		
+				
 			/* ...and a protocol */
 			Protocol_IOT_v1 protocol = new Protocol_IOT_v1(device, mqttTransport);
 		
 			/* Use the GVComm to connect transport with protocol... */
 			GVComm gvComm = new GVComm(mqttTransport, protocol);
-			
+					
 			/* ... and send device, sensors and actuators info to the server */
-			gvComm.addDevice();
-			gvComm.addSensor("SED99901", "Sensor Test", "NUMERIC");
-			gvComm.addActuator("ACD99901", "Actuator Test", "NUMERIC", cb);
+			gvComm.addDevice(cbDevice);
+			gvComm.addSensor(SENSOR1_ID, "Sensor1 Test", "NUMERIC");
+			gvComm.addActuator(ACTUATOR1_ID, "Actuator1 Test", "NUMERIC", cbActuator1);
+			gvComm.addActuator(ACTUATOR2_ID, "Actuator2 Test", "NUMERIC", cbActuator2);
+			
+			System.out.println("Configuration Done.");
+			
+			Thread.sleep(2000);
 		
-			/* Send value from sensor to actuator*/
 			while (true) {
 				gvComm.poll();
 				
-				/* Simulation of recovering data from a sensor */
-				//value = getSensorValue();
-				String value = "0";
-				
-				gvComm.sendData("SED99901", value.getBytes());
+				if(bmqtt.getMode() == MODE_RUN) {
+					System.out.println("RUN: " + bmqtt.getMode());
+					/* Simulate a sensor */
+					String value = Integer.toString((int)(Math.random() * 100));
+					
+					Thread.sleep(250);
+				}
+
 			}
 			
-		} catch(IOException e) {
-			throw new IOException(e);
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		
 	}
-
 }

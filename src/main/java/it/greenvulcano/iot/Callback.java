@@ -20,7 +20,5 @@
 package it.greenvulcano.iot;
 
 public interface Callback {
-
-	public Object call(Object payload);
-	
+	public Object call(Object payload);	
 }

@@ -22,7 +22,6 @@ package it.greenvulcano.iot;
 import java.net.InetAddress;
 
 public class DeviceInfo {
-
 	private String      id;
 	private String      name;
 	private InetAddress ip;
@@ -50,6 +49,4 @@ public class DeviceInfo {
 	public int getPort() {
 		return port;
 	}
-	
-	
 }

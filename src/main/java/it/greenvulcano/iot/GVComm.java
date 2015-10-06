@@ -31,7 +31,9 @@ import java.io.IOException;
  * 
  * @author Domenico Barra <eisenach@gmail.com>
  */
-public class GVComm {
+public class GVComm {	
+	private Transport  transport;
+	private Protocol   protocol;
 
 	/**
 	 * Constructor. No special actions taken: just simple construction.
@@ -46,35 +48,29 @@ public class GVComm {
 		this.transport = transport;
 		this.protocol = protocol;
 	}
-	
-	/**
-	 * Asks the underlying transport to subscribe to a given topic and to
-	 * register a callback to invoke when data is received on it.
-	 * 
-	 * @param topic the topic to subscribe to.
-	 * @param cb the callback to invoke.
-	 * @throws IOException if anything goes wrong with the underlying transport.
-	 * 
-	 * @see Transport
-	 * @see Transport#subscribe(String, Callback)
-	 */
-	private void addCallback(String topic, Callback cb) throws IOException {
-		transport.subscribe(topic, cb);
-	}
-	
+
 	/**
 	 * Sends info about the current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
 	public void addDevice() throws IOException {
-		protocol.addDevice(); 
+		this.addDevice(null);
 	}
-	
+
+	/**
+	 * Sends info about the current device.
+	 * @throws IOException if anything goes wrong with the underlying transport.
+	 * @param fn the callback function to invoke when data is received
+	 */
+	public void addDevice(Callback cb) throws IOException {
+		protocol.addDevice(cb); 
+	}
+
 	/**
 	 * Send information about the status of current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendStatus() throws IOException {
+	public void sendStatus(Callback cb) throws IOException {
 		protocol.sendStatus();
 	}
 	
@@ -96,7 +92,6 @@ public class GVComm {
 	 * @param id the actuator id.
 	 * @param name the actuator (human-readable) name.
 	 * @param type the actuator type.
-	 * @param topic the topic on which the actuator wishes to listen.
 	 * @param fn the callback function to invoke when data is received
 	 *           on the specified <code>topic</code>, or <code>null</code> if
 	 *           no callback is required.
@@ -106,21 +101,13 @@ public class GVComm {
 		protocol.addActuator(id, name, type, cb);
 	}
 	
-	public void addActuator(String id, String name, String type, String topic, Callback fn) throws IOException {
-		protocol.addActuator(id, name, type, topic);
-		if (fn != null) {
-			addCallback(topic, fn);
-		}
-	}
-	
 	/**
 	 * Sends data associated to a given sensor.
 	 * @param sensorId the id of the sensor sending the data.
 	 * @param value the value read from the sensor.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendData(String sensorId, byte[] value)  throws IOException
-	{
+	public void sendData(String sensorId, byte[] value)  throws IOException	{
 		protocol.sendData(sensorId, value);
 	}
 
@@ -138,9 +125,5 @@ public class GVComm {
 	public boolean poll() throws IOException {
 		return transport.poll();
 	}
-	
-	private Transport  transport;
-	private Protocol   protocol;
-	
-	
+
 }
