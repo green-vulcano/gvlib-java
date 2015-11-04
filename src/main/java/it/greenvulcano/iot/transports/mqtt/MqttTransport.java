@@ -155,6 +155,22 @@ public class MqttTransport extends TransportBase {
 			throw new IOException(e);
 		}
 	}
+	
+	/**
+	 * 
+	 */
+	@Override
+	public void send(String service, byte[] payload, boolean retain) throws IOException {
+		if (!isConnected()) {
+			connect(); // won't object if this fails.
+		}
+		
+		try {
+			this.client.publish(service, payload, params.getPublishQos(), retain);
+		} catch (MqttException e) {
+			throw new IOException(e);
+		}
+	}
 
 	/**
 	 * 
@@ -211,7 +227,7 @@ public class MqttTransport extends TransportBase {
 			opts.setPassword(params.getPassword().toCharArray());
 		}
 		
-		opts.setWill("/devices/" + params.getDeviceInfo().getId() + "/status", "{\"st\":false}".getBytes(), 1, false);
+		opts.setWill("/devices/" + params.getDeviceInfo().getId() + "/status", "{\"st\":false}".getBytes(), 1, true);
 		
 		return opts;
 	}	

@@ -53,7 +53,7 @@ public class Protocol_IOT_v1 implements Protocol {
 	public void sendStatus() throws IOException {
 		String service = String.format(ServiceConstants.DEVICE_STATUS, deviceInfo.getId());
 		String payload = String.format(ServiceConstants.DEVICE_STATUS_PAYLOAD, true);
-		transport.send(service, payload.getBytes());
+		transport.send(service, payload.getBytes(),true);
 	}
 	
 	@Override

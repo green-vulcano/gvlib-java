@@ -96,7 +96,7 @@ public class BasicMqtt {
 		final String ACTUATOR2_ID = "ACD99902";
 		
 		/* Info about mqtt server */
-		byte[] ipSer = new byte[]{10, 100, 60, 103};
+		byte[] ipSer = new byte[]{10, 100, 80, 39};
 		InetAddress ipServer = InetAddress.getByAddress(ipSer);
 		int sPort = 1883;
 		

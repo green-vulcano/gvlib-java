@@ -69,6 +69,15 @@ public interface Transport {
 	void send(String service, byte[] payload) throws IOException;
 	
 	/**
+	 * Sends a payload to the remote peer (/server).
+	 * @param service the remote GreenVulcan service to send the payload to.
+	 * @param payload the data to send.
+	 * @param retain the persistance of message on broker
+	 * @throws IOException if anything goes wront on the network level.
+	 */
+	void send(String service, byte[] payload, boolean retain) throws IOException;
+	
+	/**
 	 * Informs the remote peer (/server) of the wish to receive information
 	 * being published for a certain topic. When data is received, it shall
 	 * be passed to the provided {@link Callback}.<br/>
