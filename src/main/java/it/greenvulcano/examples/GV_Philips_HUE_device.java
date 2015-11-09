@@ -20,6 +20,9 @@
 package it.greenvulcano.examples;
 
 import java.io.IOException;
+
+import org.json.JSONObject;
+
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -34,6 +37,7 @@ import it.greenvulcano.iot.transports.mqtt.ConnectionParams;
 import it.greenvulcano.iot.transports.mqtt.MqttTransport;
 
 public class GV_Philips_HUE_device {
+	
 	public static final int MODE_STOP = 0;
 	public static final int MODE_RUN = 1;
 	public static final int MODE_DEMO = 2;
@@ -49,7 +53,10 @@ public class GV_Philips_HUE_device {
 		return current_mode;
 	}
 	
-	/* Device callback */
+	
+	/* 
+	 * Device callback 
+	 */
 	public class CallbackDevice implements Callback {
 		@Override
 		public Callback call(Object value) {
@@ -77,7 +84,10 @@ public class GV_Philips_HUE_device {
 		}
 	}
 	
-	/* Actuator callback */
+	
+	/*
+	 *  Actuator callback 
+	 */
 	public class CallbackActuator implements Callback {
 		private String id;
 		
@@ -87,8 +97,10 @@ public class GV_Philips_HUE_device {
 		
 		@Override
 		public Callback call(Object value) {
-			System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + new String((byte[])value));
+			String receivedMessage = new String((byte[])value);
 			int tidac = 0;
+			
+			System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + receivedMessage);
 			
 			if (this.id == "ACD00901") {
 			    tidac = 1;
@@ -99,6 +111,12 @@ public class GV_Philips_HUE_device {
 			}
 			
 			try {
+				
+				JSONObject obj = new JSONObject(receivedMessage);
+				String col = obj.getString("value");
+				float[] xy = calc(col);
+				
+				// rest call
 				url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/" + tidac + "/state");
 				
 				HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
@@ -107,10 +125,17 @@ public class GV_Philips_HUE_device {
 	            hurl.setRequestProperty("Content-Type", "application/json");
 	            hurl.setRequestProperty("Accept", "application/json");
 	            
-	            String message = new String((byte[])value);
+	            // Create a jsonObject message 
+	            JSONObject message = new JSONObject();
+	            message.put("on", true);
+	            message.put("sat", 255);
+	            message.put("bri", 255);
+	            message.put("xy", xy);
+	            
+	            System.out.println("Messaggio: " + message.toString());
 	            
 	            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
-	            osw.write(message);
+	            osw.write(message.toString());
 	            osw.flush();
 	            osw.close();
 	            
@@ -127,7 +152,38 @@ public class GV_Philips_HUE_device {
 		}
 	}
 	
-	// run
+	/*
+	 *  Conversion from Hexadecimal color to x,y color for HUE Philips
+	 */
+	public static float[] calc(String col) {
+		
+		int r = Integer.parseInt(col.substring(0,2),16);
+		int g = Integer.parseInt(col.substring(2,4),16);
+		int b = Integer.parseInt(col.substring(4,6),16);
+		
+		System.out.println("R: " + r + " G: " + g + " B: " + b);
+		
+		float X = r * 0.664511f + g * 0.154324f + b * 0.162028f;
+		float Y = r * 0.283881f + g * 0.668433f + b * 0.047685f;
+		float Z = r * 0.000088f + g * 0.072310f + b * 0.986039f;
+
+		float x = X / (X + Y + Z);
+		float y = Y / (X + Y + Z);
+		
+		System.out.println(x + "," + y);
+		
+		float[] xy = {0,0};
+		xy[0] = x;
+		xy[1] = y;
+		
+		return xy;
+		
+	}
+	
+	
+	/*
+	 *  Run
+	 */
 	public static void main(String[] args) throws IOException {
 		
 		final String device_id = "GVDEV009";
