@@ -46,7 +46,7 @@ public class GV_Philips_HUE_device {
 	URL url;
 	
 	public GV_Philips_HUE_device() {
-		this.current_mode = MODE_STOP;
+		this.current_mode = MODE_RUN;
 	}
 	
 	public int getMode() {
@@ -69,12 +69,39 @@ public class GV_Philips_HUE_device {
 				if(pValue.equals("{\"value\":\"OFF\"}")) {
 					System.out.println("CURRENT MODE STOP");
 					current_mode = MODE_STOP;
+					
+					// rest call on group lights
+					url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/groups/1/action");
+					
+					HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
+					hurl.setRequestMethod("PUT");
+		            hurl.setDoOutput(true);
+		            hurl.setRequestProperty("Content-Type", "application/json");
+		            hurl.setRequestProperty("Accept", "application/json");
+		            
+		            // Create a jsonObject message 
+		            JSONObject message = new JSONObject();
+		            message.put("on", false);
+		            
+		            System.out.println("Message to groups 1: " + message.toString());
+		            
+		            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
+		            osw.write(message.toString());
+		            osw.flush();
+		            osw.close();
+		            
+		            System.out.println("Response device: " + hurl.getResponseCode());
+		            
+					
 				} else if(pValue.equals("{\"value\":\"ON\"}")) {
 					System.out.println("CURRENT MODE RUN");
 					current_mode = MODE_RUN;
+					reset_light();
+					
 				} else if(pValue.equals("{\"value\":\"DEMO\"}")) {
 					System.out.println("CURRENT MODE DEMO");
 					current_mode = MODE_DEMO;
+					demo();
 				}
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -100,54 +127,63 @@ public class GV_Philips_HUE_device {
 			String receivedMessage = new String((byte[])value);
 			int tidac = 0;
 			
-			System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + receivedMessage);
-			
-			if (this.id == "ACD00901") {
-			    tidac = 1;
-			} else if (this.id == "ACD00902") {
-			    tidac = 2;
-			} else if (this.id == "ACD00903") {
-			    tidac = 3;
+			if (current_mode == 1) {
+				System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + receivedMessage);
+				
+				if (this.id == "ACD00901") {
+				    tidac = 1;
+				} else if (this.id == "ACD00902") {
+				    tidac = 2;
+				} else if (this.id == "ACD00903") {
+				    tidac = 3;
+				}
+				
+				try {
+					
+					JSONObject obj = new JSONObject(receivedMessage);
+					String col = obj.getString("value");
+					float[] xy = calc(col);
+					
+					// rest call
+					url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/" + tidac + "/state");
+					
+					HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
+					hurl.setRequestMethod("PUT");
+		            hurl.setDoOutput(true);
+		            hurl.setRequestProperty("Content-Type", "application/json");
+		            hurl.setRequestProperty("Accept", "application/json");
+		            
+		            // Create a jsonObject message 
+		            JSONObject message = new JSONObject();
+		            message.put("on", true);
+		            message.put("sat", 255);
+		            message.put("bri", 255);
+		            message.put("xy", xy);
+		            
+		            System.out.println("Message to actuator " + this.id + ": " + message.toString());
+		            
+		            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
+		            osw.write(message.toString());
+		            osw.flush();
+		            osw.close();
+		            
+		            System.out.println("Response actuator " + this.id + ": " + hurl.getResponseCode());
+					
+				} catch(MalformedURLException e) {
+		            e.printStackTrace();
+		        } catch (IOException e) {
+		            e.printStackTrace();
+		        } catch(Exception e) {
+		        	e.printStackTrace();
+		        }
+				
+			} else if (current_mode == 0) {
+				System.out.println("MODALITY OFF: the actuator do not response!!!");
+				
+			} else if (current_mode == 2) {
+				System.out.println("MODALITY DEMO");
 			}
 			
-			try {
-				
-				JSONObject obj = new JSONObject(receivedMessage);
-				String col = obj.getString("value");
-				float[] xy = calc(col);
-				
-				// rest call
-				url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/" + tidac + "/state");
-				
-				HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
-				hurl.setRequestMethod("PUT");
-	            hurl.setDoOutput(true);
-	            hurl.setRequestProperty("Content-Type", "application/json");
-	            hurl.setRequestProperty("Accept", "application/json");
-	            
-	            // Create a jsonObject message 
-	            JSONObject message = new JSONObject();
-	            message.put("on", true);
-	            message.put("sat", 255);
-	            message.put("bri", 255);
-	            message.put("xy", xy);
-	            
-	            System.out.println("Messaggio: " + message.toString());
-	            
-	            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
-	            osw.write(message.toString());
-	            osw.flush();
-	            osw.close();
-	            
-	            System.out.println(hurl.getResponseCode());
-				
-			} catch(MalformedURLException e) {
-	            e.printStackTrace();
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        } catch(Exception e) {
-	        	e.printStackTrace();
-	        }
 			return null;
 		}
 	}
@@ -243,5 +279,123 @@ public class GV_Philips_HUE_device {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/*
+	 * 
+	 */
+	public void demo() {
+		try {
+				// rest call
+				url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/groups/1/action");
+				
+				System.out.println("URL: " + url.toString());
+				
+				HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
+				hurl.setRequestMethod("PUT");
+	            hurl.setDoOutput(true);
+	            hurl.setRequestProperty("Content-Type", "application/json");
+	            hurl.setRequestProperty("Accept", "application/json");
+	            
+	            // Create a jsonObject message 
+	            JSONObject message = new JSONObject();
+	            message.put("on", true);
+	            message.put("effect", "colorloop");
+	            
+	            System.out.println("Message: " + message.toString());
+	            
+	            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
+	            osw.write(message.toString());
+	            osw.flush();
+	            osw.close();
+	            
+	            System.out.println("Response demo modality: " + hurl.getResponseCode());
+			
+		} catch(MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }
+		
+	}
+	
+	/*
+	 * 
+	 */
+	public void reset_light() {
+		try {
+				// rest call
+				URL url1 = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/1/state");
+				URL url2 = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/2/state");
+				URL url3 = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/3/state");
+	            
+				int hue1 = 25550;
+				int hue2 = 46920;
+				int hue3 = 56100;
+				
+				
+	            // Create a jsonObject message 
+	            JSONObject message1 = new JSONObject();
+	            message1.put("on", true);
+	            message1.put("sat", 255);
+	            message1.put("bri", 255);
+	            message1.put("hue", hue1);
+	            message1.put("effect","none");
+	            
+	            // Create a jsonObject message 
+	            JSONObject message2 = new JSONObject();
+	            message2.put("on", true);
+	            message2.put("sat", 255);
+	            message2.put("bri", 255);
+	            message2.put("hue", hue2);
+	            message2.put("effect","none");
+	            
+	            // Create a jsonObject message 
+	            JSONObject message3 = new JSONObject();
+	            message3.put("on", true);
+	            message3.put("sat", 255);
+	            message3.put("bri", 255);
+	            message3.put("hue", hue3);
+	            message3.put("effect","none");
+	            
+	            put_call(url1,message1.toString());
+	            put_call(url2,message2.toString());
+	            put_call(url3,message3.toString());
+	            
+	            
+			
+		} catch(MalformedURLException e) {
+            e.printStackTrace();
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }
+	}
+	
+	/*
+	 *  Generic put call
+	 */
+	public void put_call(URL url, String message){
+		
+		try {
+			HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
+			hurl.setRequestMethod("PUT");
+	        hurl.setDoOutput(true);
+	        hurl.setRequestProperty("Content-Type", "application/json");
+	        hurl.setRequestProperty("Accept", "application/json");
+	        
+	        OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
+	        osw.write(message.toString());
+	        osw.flush();
+	        osw.close();
+	        
+	        System.out.println("Response demo modality: " + hurl.getResponseCode());
+	        
+		} catch (IOException e) {
+            e.printStackTrace();
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }
 	}
 }
