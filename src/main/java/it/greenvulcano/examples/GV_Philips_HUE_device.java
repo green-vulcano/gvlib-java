@@ -41,6 +41,7 @@ public class GV_Philips_HUE_device {
 	public static final int MODE_STOP = 0;
 	public static final int MODE_RUN = 1;
 	public static final int MODE_DEMO = 2;
+	public static final int MODE_LIGHT_OFF = 3;
 	private int current_mode;
 	
 	URL url;
@@ -90,6 +91,10 @@ public class GV_Philips_HUE_device {
 					System.out.println("CURRENT MODE DEMO");
 					current_mode = MODE_DEMO;
 					demo();
+				} else if(pValue.equals("{\"value\":\"DARK\"}")) {
+					System.out.println("CURRENT MODE LIGHT OFF");
+					current_mode = MODE_LIGHT_OFF;
+					light_off();
 				}
 				
 			} catch(MalformedURLException e) {
@@ -118,7 +123,7 @@ public class GV_Philips_HUE_device {
 			String receivedMessage = new String((byte[])value);
 			int tidac = 0;
 			
-			if (current_mode == 1) {
+			if (current_mode == 1 || current_mode == 3) {
 				System.out.println("ACTUATOR " + this.id + " CALLBACK CALLED: " + receivedMessage);
 				
 				if (this.id == "ACD00901") {
@@ -248,7 +253,7 @@ public class GV_Philips_HUE_device {
 				gvComm.poll();
 				
 				if(gvhue.getMode() == MODE_RUN) {
-					System.out.println("RUN: " + gvhue.getMode());
+					//System.out.println("RUN: " + gvhue.getMode());
 					Thread.sleep(250);
 				}
 
@@ -330,6 +335,27 @@ public class GV_Philips_HUE_device {
 	            put_call(url3,message3.toString());
 	            
 	            
+			
+		} catch(MalformedURLException e) {
+            e.printStackTrace();
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }
+	}
+	/*
+	 *  Method for shoutdown light
+	 */
+	public void light_off() {
+		try {
+			url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/groups/1/action");
+		
+			System.out.println("URL: " + url.toString());
+        
+			// Create a jsonObject message 
+			JSONObject message = new JSONObject();
+			message.put("on", false);
+			
+			put_call(url, message.toString());
 			
 		} catch(MalformedURLException e) {
             e.printStackTrace();
