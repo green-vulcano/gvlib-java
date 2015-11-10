@@ -72,12 +72,6 @@ public class GV_Philips_HUE_device {
 					
 					// rest call on group lights
 					url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/groups/1/action");
-					
-					HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
-					hurl.setRequestMethod("PUT");
-		            hurl.setDoOutput(true);
-		            hurl.setRequestProperty("Content-Type", "application/json");
-		            hurl.setRequestProperty("Accept", "application/json");
 		            
 		            // Create a jsonObject message 
 		            JSONObject message = new JSONObject();
@@ -85,13 +79,7 @@ public class GV_Philips_HUE_device {
 		            
 		            System.out.println("Message to groups 1: " + message.toString());
 		            
-		            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
-		            osw.write(message.toString());
-		            osw.flush();
-		            osw.close();
-		            
-		            System.out.println("Response device: " + hurl.getResponseCode());
-		            
+		            put_call(url, message.toString());
 					
 				} else if(pValue.equals("{\"value\":\"ON\"}")) {
 					System.out.println("CURRENT MODE RUN");
@@ -103,7 +91,10 @@ public class GV_Philips_HUE_device {
 					current_mode = MODE_DEMO;
 					demo();
 				}
-			} catch(Exception e) {
+				
+			} catch(MalformedURLException e) {
+	            e.printStackTrace();
+	        } catch(Exception e) {
 				e.printStackTrace();
 			}
 			
@@ -146,12 +137,6 @@ public class GV_Philips_HUE_device {
 					
 					// rest call
 					url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/lights/" + tidac + "/state");
-					
-					HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
-					hurl.setRequestMethod("PUT");
-		            hurl.setDoOutput(true);
-		            hurl.setRequestProperty("Content-Type", "application/json");
-		            hurl.setRequestProperty("Accept", "application/json");
 		            
 		            // Create a jsonObject message 
 		            JSONObject message = new JSONObject();
@@ -162,16 +147,9 @@ public class GV_Philips_HUE_device {
 		            
 		            System.out.println("Message to actuator " + this.id + ": " + message.toString());
 		            
-		            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
-		            osw.write(message.toString());
-		            osw.flush();
-		            osw.close();
-		            
-		            System.out.println("Response actuator " + this.id + ": " + hurl.getResponseCode());
+		            put_call(url, message.toString());
 					
 				} catch(MalformedURLException e) {
-		            e.printStackTrace();
-		        } catch (IOException e) {
 		            e.printStackTrace();
 		        } catch(Exception e) {
 		        	e.printStackTrace();
@@ -286,16 +264,10 @@ public class GV_Philips_HUE_device {
 	 */
 	public void demo() {
 		try {
-				// rest call
+			
 				url = new URL("http://10.100.80.26/api/2466d24d2e9caa072ccf2b09882ce23/groups/1/action");
 				
 				System.out.println("URL: " + url.toString());
-				
-				HttpURLConnection hurl = (HttpURLConnection) url.openConnection();
-				hurl.setRequestMethod("PUT");
-	            hurl.setDoOutput(true);
-	            hurl.setRequestProperty("Content-Type", "application/json");
-	            hurl.setRequestProperty("Accept", "application/json");
 	            
 	            // Create a jsonObject message 
 	            JSONObject message = new JSONObject();
@@ -304,16 +276,9 @@ public class GV_Philips_HUE_device {
 	            
 	            System.out.println("Message: " + message.toString());
 	            
-	            OutputStreamWriter osw = new OutputStreamWriter(hurl.getOutputStream());
-	            osw.write(message.toString());
-	            osw.flush();
-	            osw.close();
-	            
-	            System.out.println("Response demo modality: " + hurl.getResponseCode());
+	            put_call(url, message.toString());
 			
 		} catch(MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         } catch(Exception e) {
         	e.printStackTrace();
@@ -322,7 +287,7 @@ public class GV_Philips_HUE_device {
 	}
 	
 	/*
-	 * 
+	 *  Method for reset the HUE lights with preset colors
 	 */
 	public void reset_light() {
 		try {
