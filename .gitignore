@@ -10,6 +10,10 @@ target
 
 *.class
 
+# IntelliJ IDEA files - use the Maven importer instead
+.idea
+*.iml
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
