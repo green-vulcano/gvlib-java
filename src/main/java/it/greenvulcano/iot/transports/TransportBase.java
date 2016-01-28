@@ -59,12 +59,12 @@ public abstract class TransportBase implements Transport {
 	public final void connect() throws IOException {
 		try {
 			handleConnect();
+			invokeCallback(TransportListener::afterConnect, new TransportListener.Info(this));
 		} catch (Exception exc) {
 			invokeCallback(TransportListener::afterConnectionUnsuccessful,
 					new TransportListener.Info(this, null, exc));
 			throw exc;
 		}
-
 	}
 
 	@Override
