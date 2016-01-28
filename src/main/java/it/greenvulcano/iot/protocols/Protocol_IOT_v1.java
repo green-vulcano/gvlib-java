@@ -19,15 +19,20 @@
 package it.greenvulcano.iot.protocols;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import it.greenvulcano.iot.Callback;
 import it.greenvulcano.iot.DeviceInfo;
 import it.greenvulcano.iot.transports.Transport;
+import it.greenvulcano.iot.transports.TransportListener;
 
 /**
  * GreenVulcano IOT Protocol v.1
  */
-public class Protocol_IOT_v1 implements Protocol {	
+public class Protocol_IOT_v1 implements Protocol, TransportListener {
+	private static final Logger LOG = Logger.getLogger(Protocol_IOT_v1.class.getName());
+
 	protected Transport  transport;
 	protected DeviceInfo deviceInfo;
 
@@ -50,10 +55,10 @@ public class Protocol_IOT_v1 implements Protocol {
 	}
 	
 	@Override
-	public void sendStatus() throws IOException {
+	public void sendStatus(boolean status) throws IOException {
 		String service = String.format(ServiceConstants.DEVICE_STATUS, deviceInfo.getId());
-		String payload = String.format(ServiceConstants.DEVICE_STATUS_PAYLOAD, true);
-		transport.send(service, payload.getBytes(),true);
+		String payload = String.format(ServiceConstants.DEVICE_STATUS_PAYLOAD, status);
+		transport.send(service, payload.getBytes(), true);
 	}
 	
 	@Override
@@ -78,5 +83,24 @@ public class Protocol_IOT_v1 implements Protocol {
 		String service = String.format(ServiceConstants.SENSOR_DATA, deviceInfo.getId(), sensorId);		
 		String payload = String.format(ServiceConstants.SENSOR_DATA_PAYLOAD, new String(value));
 		this.transport.send(service, payload.getBytes());
+	}
+
+	@Override
+	public void afterConnect(Info i) {
+		try {
+			sendStatus(true);
+		} catch (IOException exc) {
+			LOG.log(Level.WARNING, "Error while signaling device up.", exc);
+		}
+	}
+
+	@Override
+	public void beforeDisconnect(Info i) {
+		try {
+			sendStatus(false);
+		} catch (IOException exc) {
+			LOG.log(Level.WARNING, "Error while signaling device down (last will).", exc);
+		}
+
 	}
 }

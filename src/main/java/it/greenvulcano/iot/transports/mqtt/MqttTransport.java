@@ -21,16 +21,11 @@ package it.greenvulcano.iot.transports.mqtt;
 
 import it.greenvulcano.iot.Callback;
 import it.greenvulcano.iot.transports.TransportBase;
+import org.eclipse.paho.client.mqttv3.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * MQTT transport.
@@ -38,14 +33,15 @@ import org.eclipse.paho.client.mqttv3.MqttException;
  * Using Eclipse Paho MQTT v.3.1 client
  */
 public class MqttTransport extends TransportBase {
+	private static final Logger LOG = Logger.getLogger(MqttTransport.class.getName());
+
 	private ConnectionParams params;
-	private MqttAsyncClient client;
+	private MqttClient client;
 	private CallbackHandler cbHandler;
-	private MqttListner mqttListner;
-	
+
 	/**
-	 * 
-	 * @param params
+	 * Creates a new MQTT transport.
+	 * @param params the connection options for the transport.
 	 * @throws IOException
 	 */
 	public MqttTransport(ConnectionParams params) throws IOException {
@@ -53,41 +49,29 @@ public class MqttTransport extends TransportBase {
 		String host = String.format("tcp://%s:%d", params.getServer().getHostAddress(), params.getPort());
 		
 		this.cbHandler = new CallbackHandler(this, params);
-		this.mqttListner = new MqttListner(this, params);
-			
+
 		try {
-			client = new MqttAsyncClient(host, params.getDeviceInfo().getId());
-			this.connect();
-			
-			while(!this.isConnected());
-	        
+			client = new MqttClient(host, params.getDeviceInfo().getId());
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
-	}	
-
-	/**
-	 * 
-	 */
-	@Override
-	public boolean isConnected() {
-		try {
-			Thread.sleep(10);
-			return this.client.isConnected();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
 	}
 
 	/**
 	 * 
 	 */
 	@Override
-	public void connect() throws IOException {	
+	public boolean isConnected() {
+		return this.client.isConnected();
+	}
+
+	/**
+	 * 
+	 */
+	@Override
+	protected void handleConnect() throws IOException {
 		try {
-			this.client.connect(buildConnectOptions(), null, mqttListner);
+			this.client.connect(buildConnectOptions());
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}	
@@ -97,47 +81,13 @@ public class MqttTransport extends TransportBase {
 	 * 
 	 */
 	@Override
-	public void disconnect() {
+	protected void handleDisconnect() {
 		try {
 			if (isConnected())
 				this.client.disconnect();
 		} catch (MqttException e) {
-			e.printStackTrace();
-			// TODO: don't just swallow it, add logging
+			LOG.log(Level.WARNING, "Error while disconnecting.", e);
 		}
-	}
-	
-	/**
-	 * 
-	 */
-	@Override
-	public void subscribe(final String topic, final Callback cb) throws IOException {	
-		try {
-            client.subscribe(topic, 0, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-        			try {
-						handleSubscribe(topic, cb);						
-						client.setCallback(cbHandler);
-					} catch (IOException e) {
-						try {
-							client.unsubscribe(topic);
-						} catch (MqttException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					}
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                	System.out.println("Subscription FAILED");
-                }
-            });
-
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
 	}
 
 	/**
@@ -164,7 +114,7 @@ public class MqttTransport extends TransportBase {
 		if (!isConnected()) {
 			connect(); // won't object if this fails.
 		}
-		
+
 		try {
 			this.client.publish(service, payload, params.getPublishQos(), retain);
 		} catch (MqttException e) {
@@ -177,25 +127,21 @@ public class MqttTransport extends TransportBase {
 	 */
 	@Override
 	public boolean poll() throws IOException {
-		if (params.isAsyncCallbacks()) {
-			return false;
-		}
-		
-		return cbHandler.processPendingIncomingMessages() > 0;
+		return !params.isAsyncCallbacks() && cbHandler.processPendingIncomingMessages() > 0;
 	}
 
 	/**
 	 * 
 	 */
 	@Override
-	protected void handleSubscribe(final String topic, final Callback cb) throws IOException {			
-		List<Callback> callbacks = registeredCallbacks.get(topic);
-		if (callbacks == null) {
-			callbacks = new ArrayList<>();
-			registeredCallbacks.put(topic, callbacks);
+	protected void handleSubscribe(final String topic, final Callback cb) throws IOException {
+		try {
+			client.subscribe(topic);
+			client.setCallback(cbHandler);
+		} catch (MqttException e) {
+			throw new IOException(e);
 		}
-		
-		callbacks.add(cb);
+
 	}
 
 	/**
@@ -226,9 +172,7 @@ public class MqttTransport extends TransportBase {
 		if (params.getPassword() != null) {
 			opts.setPassword(params.getPassword().toCharArray());
 		}
-		
-		opts.setWill("/devices/" + params.getDeviceInfo().getId() + "/status", "{\"st\":false}".getBytes(), 1, true);
-		
+
 		return opts;
 	}	
 }

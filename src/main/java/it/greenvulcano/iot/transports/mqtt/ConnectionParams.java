@@ -13,7 +13,7 @@ public class ConnectionParams {
 	private int         publishQos     = 1;
 	private boolean     publishRetain  = false;
 	private boolean     asyncCallbacks = true;
-	private boolean     autoconnect    = true;	
+	private boolean     autoconnect    = true;
 
 	public ConnectionParams(DeviceInfo deviceInfo, InetAddress server, int port) {
 		this.deviceInfo = deviceInfo;

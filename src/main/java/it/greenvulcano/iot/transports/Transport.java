@@ -112,4 +112,22 @@ public interface Transport {
 	 * @throws IOException if anything goes wrong on the network level.
 	 */
 	boolean poll() throws IOException;
+
+	/**
+	 * Registers a listener for the current transport.
+	 * @param tl the listener to register.
+	 * @return <code>true</code> if the listener has been registered,
+	 *         <code>false</code> otherwise (i.e. the listener had already been
+	 *         registered).
+     */
+	boolean addTransportListener(TransportListener tl);
+
+	/**
+	 * Removes a listener for the current transport.
+	 * @param tl the listener to remove.
+	 * @return <code>true</code> if the listener has been removed,
+	 *         <code>false</code> otherwise (i.e. the listener had already been
+	 *         removed or had never been added).
+	 */
+	boolean removeTransportListener(TransportListener tl);
 }

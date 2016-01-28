@@ -25,8 +25,8 @@ import it.greenvulcano.iot.Callback;
 
 public interface Protocol {
 	void addDevice(Callback cb) throws IOException;
-	void sendStatus() throws IOException;
+	void sendStatus(boolean status) throws IOException;
 	void addSensor(String id, String name, String type) throws IOException;
 	void addActuator(String id, String name, String type, Callback cb) throws IOException;
-	void sendData(String sensorId, byte[] value) throws IOException;	
+	void sendData(String sensorId, byte[] value) throws IOException;
 }

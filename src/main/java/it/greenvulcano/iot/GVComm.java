@@ -60,7 +60,7 @@ public class GVComm {
 	/**
 	 * Sends info about the current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
-	 * @param fn the callback function to invoke when data is received
+	 * @param cb the callback function to invoke when data is received
 	 */
 	public void addDevice(Callback cb) throws IOException {
 		protocol.addDevice(cb); 
@@ -70,8 +70,8 @@ public class GVComm {
 	 * Send information about the status of current device.
 	 * @throws IOException if anything goes wrong with the underlying transport.
 	 */
-	public void sendStatus(Callback cb) throws IOException {
-		protocol.sendStatus();
+	public void sendStatus(boolean status) throws IOException {
+		protocol.sendStatus(status);
 	}
 	
 	/**
@@ -92,7 +92,7 @@ public class GVComm {
 	 * @param id the actuator id.
 	 * @param name the actuator (human-readable) name.
 	 * @param type the actuator type.
-	 * @param fn the callback function to invoke when data is received
+	 * @param cb the callback function to invoke when data is received
 	 *           on the specified <code>topic</code>, or <code>null</code> if
 	 *           no callback is required.
 	 * @throws IOException if anything goes wrong with the underlying transport.

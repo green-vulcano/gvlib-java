@@ -60,11 +60,9 @@ public class BasicMqtt {
 	/* Device callback */
 	public class CallbackDevice implements Callback {
 		@Override
-		public Callback call(Object value) {
-			int pValue = -1;
-			
+		public Object call(Object value) {
 			try {
-				pValue = Integer.parseInt(new String((byte[])value));
+				int pValue = Integer.parseInt(new String((byte[])value));
 								
 				if(pValue == 0) {
 					System.out.println("CURRENT MODE STOP");
@@ -77,8 +75,7 @@ public class BasicMqtt {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
-			
-			return null;
+			return value;
 		}
 	}
 	
@@ -118,6 +115,9 @@ public class BasicMqtt {
 		
 			/* Use the GVComm to connect transport with protocol... */
 			GVComm gvComm = new GVComm(mqttTransport, protocol);
+
+			/* ... then START the transport ... */
+			mqttTransport.connect();
 					
 			/* ... and send device, sensors and actuators info to the server */
 			gvComm.addDevice(cbDevice);
@@ -128,19 +128,25 @@ public class BasicMqtt {
 			System.out.println("Configuration Done.");
 			
 			Thread.sleep(2000);
-		
+		forever:
 			while (true) {
 				gvComm.poll();
-				
-				if(bmqtt.getMode() == MODE_RUN) {
-					System.out.println("RUN: " + bmqtt.getMode());
-					/* Simulate a sensor */
-					String value = Integer.toString((int)(Math.random() * 100));
-					
-					Thread.sleep(250);
-				}
 
+				switch (bmqtt.getMode()) {
+					case MODE_RUN:
+						System.out.println("RUN.");
+						/* Simulate a sensor */
+						String value = Integer.toString((int)(Math.random() * 100));
+						break;
+					case MODE_STOP:
+						System.out.println("STOP.");
+						break;
+					default:
+						break forever;
+				}
+				Thread.sleep(250);
 			}
+			mqttTransport.disconnect();
 			
 		} catch(Exception e) {
 			e.printStackTrace();

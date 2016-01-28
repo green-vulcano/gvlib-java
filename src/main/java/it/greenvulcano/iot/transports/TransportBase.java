@@ -22,11 +22,9 @@ package it.greenvulcano.iot.transports;
 import it.greenvulcano.iot.Callback;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Practical base class for most {@link Transport} implementations.
@@ -42,8 +40,41 @@ public abstract class TransportBase implements Transport {
 	 */
 	protected Map<String, List<Callback>> registeredCallbacks = new HashMap<>();
 
+	/**
+	 * Holds the registered transport listeners.
+	 */
+	protected Set<TransportListener> transportListeners = new HashSet<>();
+
 	@Override
-	public void subscribe(String topic, Callback cb) throws IOException {
+	public boolean addTransportListener(TransportListener tl) {
+		return transportListeners.add(tl);
+	}
+
+	@Override
+	public boolean removeTransportListener(TransportListener tl) {
+		return transportListeners.remove(tl);
+	}
+
+	@Override
+	public final void connect() throws IOException {
+		try {
+			handleConnect();
+		} catch (Exception exc) {
+			invokeCallback(TransportListener::afterConnectionUnsuccessful,
+					new TransportListener.Info(this, null, exc));
+			throw exc;
+		}
+
+	}
+
+	@Override
+	public final void disconnect() {
+		invokeCallback(TransportListener::beforeDisconnect, new TransportListener.Info(this));
+		handleDisconnect();
+	}
+
+	@Override
+	public final void subscribe(String topic, Callback cb) throws IOException {
 		if (!isConnected()) {
 			connect();
 		}
@@ -55,16 +86,20 @@ public abstract class TransportBase implements Transport {
 			callbacks = new ArrayList<>();
 			registeredCallbacks.put(topic, callbacks);
 		}
-		
 		callbacks.add(cb);
+
+		invokeCallback(TransportListener::afterSubscribe, new TransportListener.Info(this, topic));
 	}
 	
 	@Override
-	public void unsubscribe(String topic, Callback cb) throws IOException {
+	public final void unsubscribe(String topic, Callback cb) throws IOException {
 		if (!isConnected()) {
 			connect();
 		}
+
+		invokeCallback(TransportListener::beforeUnsubscribe, new TransportListener.Info(this, topic));
 		handleUnsubscribe(topic, cb);
+
 		if (cb == null) {
 			registeredCallbacks.remove(topic);
 		} else {
@@ -92,6 +127,11 @@ public abstract class TransportBase implements Transport {
 		return Collections.emptyList();
 	}
 
+	protected void invokeCallback(BiConsumer<TransportListener, TransportListener.Info> cback,
+								  TransportListener.Info info) {
+		transportListeners.forEach( lst -> cback.accept(lst, info) );
+	}
+
 	/**
 	 * Delegate for the implementation-specific details of topic subscription.
 	 * Every concrete instance of a {@link Transport} need to provide an
@@ -114,4 +154,9 @@ public abstract class TransportBase implements Transport {
 	 * @throws IOException if anything goes wrong during the unsubscription phase.
 	 */
 	protected abstract void handleUnsubscribe(String topic, Callback cb) throws IOException;
+
+	protected abstract void handleConnect() throws IOException;
+
+	protected abstract void handleDisconnect();
+
 }
