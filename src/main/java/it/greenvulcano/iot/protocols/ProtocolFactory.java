@@ -27,7 +27,7 @@ public enum ProtocolFactory {
 	
 	public static ProtocolFactory getInstance() { return INSTANCE; }
 	
-	Protocol createDefaultProtocol(DeviceInfo info, Transport transport) {
+	public Protocol createDefaultProtocol(DeviceInfo info, Transport transport) {
 		return new Protocol_IOT_v1(info, transport);
 	}
 }
